@@ -48,7 +48,7 @@ export default function Home() {
         </h2>
 
         <div className="bg-white p-4 rounded-xl shadow-sm space-y-2">
-          <p><b>Exam:</b> RRB Nursing 2026</p>
+          <p><b>Exam:</b> RRB Nursing Superindant 2026</p>
           <p><b>Total Posts:</b>  272</p>
           <p><b>Expected Cutoff:</b> 60–75</p>
           <p><b>Competition Level:</b> High 🔥</p>
