@@ -16,13 +16,13 @@ export default function Home() {
 
         <div className="mt-6 flex justify-center gap-4">
           <Link href="/submit">
-            <button className="bg-black text-white px-6 py-2 rounded-lg">
+            <button className="bg-gradient-to-r from-amber-600 via-orange-500 to-red-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-amber-700 hover:via-orange-600 hover:to-red-700 transition shadow-md">
               Submit Marks
             </button>
           </Link>
 
           <Link href="/leaderboard">
-            <button className="border px-6 py-2 rounded-lg">
+            <button className="border-2 border-amber-600 text-amber-700 px-8 py-3 rounded-lg font-semibold hover:bg-amber-50 transition">
               View Leaderboard
             </button>
           </Link>
@@ -67,9 +67,9 @@ export default function Home() {
           <a
             href="https://www.youtube.com/channel/UCRy0SOk3XQCa0L0TFDuzIwQ"
             target="_blank"
-            className="inline-block mt-2 bg-black text-white px-6 py-2 rounded-lg"
+            className="inline-block mt-2 bg-gradient-to-r from-amber-600 via-orange-500 to-red-600 text-white px-6 py-2 rounded-lg hover:from-amber-700 hover:via-orange-600 hover:to-red-700 transition font-semibold"
           >
-            Watch Analysis 🎥
+            Check Cutoff Analysis 📊
           </a>
         </div>
       </section>
@@ -117,7 +117,7 @@ export default function Home() {
         </p>
 
         <Link href="/submit">
-          <button className="mt-5 bg-black text-white px-8 py-3 rounded-lg">
+          <button className="mt-5 bg-gradient-to-r from-amber-600 via-orange-500 to-red-600 text-white px-8 py-3 rounded-lg hover:from-amber-700 hover:via-orange-600 hover:to-red-700 transition font-semibold">
             Check Now 🔥
           </button>
         </Link>

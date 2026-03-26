@@ -7,10 +7,10 @@ export default function Navbar() {
   const pathname = usePathname();
 
   const linkStyle = (path: string) =>
-    `px-3 py-1 rounded-md text-sm ${
+    `px-3 py-1 rounded-md text-sm font-semibold transition ${
       pathname === path
-        ? "bg-black text-white"
-        : "text-gray-600 hover:text-black"
+        ? "bg-gradient-to-r from-amber-600 via-orange-500 to-red-600 text-white"
+        : "text-gray-600 hover:text-amber-600"
     }`;
 
   return (
