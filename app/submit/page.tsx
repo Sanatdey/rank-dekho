@@ -28,57 +28,53 @@ export default function SubmitPage() {
 
   const [rank, setRank] = useState<any>(null);
 
-  const submit = async () => {
-    if (loading) return;
+const submit = async () => {
+  if (loading) return;
 
-    setError("");
-    setSuccess("");
+  setError("");
+  setSuccess("");
 
-    if (!form.name || !form.marks) {
-      setError("Please fill all fields");
-      return;
+  if (!form.name || !form.marks) {
+    setError("Please fill all fields");
+    return;
+  }
+
+  const marks = Number(form.marks);
+  if (marks < 0 || marks > 300) {
+    setError("Marks must be between 0 and 300");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    const res = await fetch("/api/submit", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(form),
+    });
+
+    const json = await res.json();
+
+    if (!res.ok || !json?.rank) {
+      throw new Error("API failed");
     }
 
-    const marks = Number(form.marks);
-    if (marks < 0 || marks > 300) {
-      setError("Marks must be between 0 and 300");
-      return;
-    }
+    setRank(json.rank);
+    setSuccess("Submitted successfully 🚀");
 
-    try {
-      setLoading(true);
-
-      const res = await fetch("/api/submit", {
-        method: "POST",
-        body: JSON.stringify(form),
-      });
-
-      console.log(res);
-
-      const json = await res.json();
-      if (!res.ok) throw new Error();
-
-      setRank(json.rank);
-      setSuccess("Submitted successfully 🚀");
-      setLoading(false);
-
-      setForm({
-        name: "",
-        marks: "",
-        zone: "Kolkata",
-        category: "UR",
-        shift: "1",
-        exam: "RRB-2026",
-      });
-
-    } catch {
-      setError("Something went wrong. Try again.");
-      setLoading(false);
-    }
-  };
+  } catch (err) {
+    console.error(err);
+    setError("Something went wrong. Try again.");
+  } finally {
+    setLoading(false); // 🔥 THIS IS THE REAL FIX
+  }
+};
 
   return (
-    <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <main className="min-h-screen bg-gray-50 px-4 py-6">
       <div className="w-full max-w-md bg-white p-6 rounded-xl shadow-sm">
 
         <h1 className="text-2xl font-bold text-center">
@@ -171,6 +167,7 @@ export default function SubmitPage() {
             </div>
 
             <button
+              type="button"
               onClick={submit}
               disabled={loading}
               className="w-full mt-6 py-2 bg-gradient-to-r from-amber-600 via-orange-500 to-red-600 text-white rounded-lg"
