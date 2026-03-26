@@ -7,16 +7,24 @@ interface LeaderboardEntry {
   marks: number;
   normalizedMarks?: number;
   shift?: string;
+  rank?: number;
 }
 
 export default function Leaderboard() {
   const [zone, setZone] = useState("");
   const [category, setCategory] = useState("");
+
+  const [input, setInput] = useState("");
   const [search, setSearch] = useState("");
+
   const [data, setData] = useState<LeaderboardEntry[]>([]);
+  const [searchResults, setSearchResults] = useState<LeaderboardEntry[]>([]);
+
   const [loading, setLoading] = useState(false);
-  const [showCTA, setShowCTA] = useState(false);
-  const [displayCount, setDisplayCount] = useState(20);
+  const [searchLoading, setSearchLoading] = useState(false);
+
+  const [lastId, setLastId] = useState<string | null>(null);
+  const [stats, setStats] = useState({ totalUsers: 0, highestMarks: 0 });
 
   const zones = [
     "Ahmedabad","Ajmer","Allahabad (Prayagraj)","Bangalore","Bhopal",
@@ -25,154 +33,151 @@ export default function Leaderboard() {
     "Patna","Ranchi","Secunderabad","Siliguri","Thiruvananthapuram"
   ];
 
-  const fetchData = () => {
+  const LIMIT = 30;
+
+  const fetchStats = async () => {
+    const res = await fetch("/api/stats");
+    const json = await res.json();
+    setStats(json);
+  };
+
+  const fetchData = async (loadMore = false) => {
     setLoading(true);
-    setShowCTA(false);
+
+    if (!loadMore) {
+      setData([]);
+      setLastId(null);
+    }
 
     const params = new URLSearchParams();
     if (zone) params.append("zone", zone);
     if (category) params.append("category", category);
+    if (loadMore && lastId) params.append("lastId", lastId);
 
-    fetch(`/api/leaderboard?${params.toString()}`)
-      .then((res) => res.json())
-      .then((res) => {
-        setData(res);
-        setLoading(false);
-        setTimeout(() => setShowCTA(true), 1200);
-      })
-      .catch(() => {
-        setData([]);
-        setLoading(false);
-      });
+    const res = await fetch(`/api/leaderboard?${params}`);
+    const json = await res.json();
+
+    if (loadMore) {
+      setData((prev) => [...prev, ...json.data]);
+    } else {
+      setData(json.data);
+    }
+
+    setLastId(json.lastId);
+    setLoading(false);
+  };
+
+  const handleSearch = async () => {
+    if (!input.trim()) return;
+
+    setSearch(input);
+    setSearchLoading(true);
+
+    const res = await fetch(`/api/search?name=${input}`);
+    const json = await res.json();
+    setSearchResults(json);
+
+    setSearchLoading(false);
+  };
+
+  const clearSearch = () => {
+    setSearch("");
+    setInput("");
+    setSearchResults([]);
   };
 
   useEffect(() => {
+    fetchStats();
     fetchData();
-    setDisplayCount(20);
   }, [zone, category]);
 
-  const handleSearch = (value: string) => {
-    setSearch(value);
-  };
+  const finalData = search ? searchResults : data;
 
-  const handleLoadMore = () => {
-    setDisplayCount((prev) => prev + 10);
-  };
-
-  const handleRefresh = () => {
-    fetchData();
-  };
-
-  // ✅ LOAD MORE FIRST (IMPORTANT)
-  const displayedData = data.slice(0, displayCount);
-
-  // ✅ THEN FILTER (SEARCH)
-  const finalData = search
-    ? displayedData.filter((item) =>
-        item.name.toLowerCase().includes(search.toLowerCase())
-      )
-    : displayedData;
+  const userRank = searchResults[0]?.rank;
 
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-6">
 
-      {/* Header */}
+      {/* HEADER */}
       <div className="max-w-2xl mx-auto text-center">
-        <h1 className="text-3xl font-bold">RRB Nursing Superintendent 2026</h1>
+        <h1 className="text-3xl font-bold">
+          RRB Nursing Superintendent 2026
+        </h1>
 
-        {/* Stats */}
-        <div className="mt-4 space-y-2">
-          <p className="text-red-600 font-bold text-base flex items-center justify-center gap-2">
-            🔥 {data.length}+ students already ranked • growing fast
-            <button
-              onClick={handleRefresh}
-              className="text-xl hover:rotate-180 transition"
-            >
-              🔄
-            </button>
-          </p>
-
-          {data.length > 0 && (
-            <p className="flex items-center justify-center gap-2">
-              🏆 Highest mark:
-              <span className="text-2xl font-bold text-blue-600">
-                {data[0]?.marks}
-              </span>
-            </p>
-          )}
-        </div>
-
-        <p className="text-sm text-gray-500 mt-2">
-          📊 Based on real student submissions
+        <p className="text-red-600 font-bold mt-3">
+          🔥 {stats.totalUsers}+ students already ranked
         </p>
 
-        <p className="text-sm text-gray-500 mt-2">
-          {zone || category ? "Filtered Results" : "All India Merit List"}
+        <p className="mt-2">
+          🏆 Highest mark:
+          <span className="text-xl font-bold text-blue-600 ml-2">
+            {stats.highestMarks}
+          </span>
         </p>
       </div>
 
-      {/* Search */}
-      <div className="max-w-2xl mx-auto mt-4">
+      {/* SEARCH */}
+      <div className="max-w-2xl mx-auto mt-4 flex gap-2">
         <input
           type="text"
-          placeholder="Type your name to find your rank instantly 🔍"
-          value={search}
-          onChange={(e) => handleSearch(e.target.value)}
+          placeholder="Type your name..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           className="w-full border p-2 rounded-lg"
         />
+
+        <button
+          onClick={handleSearch}
+          className="px-4 bg-gradient-to-r from-amber-600 via-orange-500 to-red-600 text-white rounded-lg font-semibold"
+        >
+          Search
+        </button>
+
+        {search && (
+          <button onClick={clearSearch} className="px-3 border rounded-lg">
+            ✕
+          </button>
+        )}
       </div>
 
-      {/* Filters */}
-      <div className="max-w-2xl mx-auto mt-3 flex gap-2">
-        <select
-          className="w-full border p-2 rounded-lg"
-          value={zone}
-          onChange={(e) => setZone(e.target.value)}
-        >
-          <option value="">All Zones</option>
-          {zones.map((z) => (
-            <option key={z}>{z}</option>
-          ))}
-        </select>
-
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="w-full border p-2 rounded-lg"
-        >
-          <option value="">All Categories</option>
-          <option>UR</option>
-          <option>OBC</option>
-          <option>SC</option>
-          <option>ST</option>
-          <option>EWS</option>
-        </select>
-      </div>
-
-      {/* Top 3 */}
-      {!search && data.length >= 3 && (
-        <div className="max-w-2xl mx-auto mt-6 grid grid-cols-3 gap-2 text-center">
-          <div className="bg-white p-4 rounded-xl shadow">
-            🥈 Rank 2
-            <p>{data[1].name}</p>
-            <p className="font-bold">{data[1].marks}</p>
-          </div>
-
-          <div className="bg-white p-4 rounded-xl shadow-lg border-2 border-black">
-            🥇 Rank 1
-            <p>{data[0].name}</p>
-            <p className="font-bold">{data[0].marks}</p>
-          </div>
-
-          <div className="bg-white p-4 rounded-xl shadow">
-            🥉 Rank 3
-            <p>{data[2].name}</p>
-            <p className="font-bold">{data[2].marks}</p>
-          </div>
+      {/* 🎯 USER RANK */}
+      {search && userRank && (
+        <div className="max-w-2xl mx-auto mt-4 bg-yellow-100 border border-yellow-300 p-3 rounded-lg text-center font-semibold">
+          🎯 Your Rank: {userRank}
         </div>
       )}
 
-      {/* Table */}
+      {/* FILTERS */}
+      {!search && (
+        <div className="max-w-2xl mx-auto mt-3 flex gap-2">
+          <select
+            className="w-full border p-2 rounded-lg"
+            value={zone}
+            onChange={(e) => setZone(e.target.value)}
+          >
+            <option value="">All Zones</option>
+            {zones.map((z) => (
+              <option key={z}>{z}</option>
+            ))}
+          </select>
+
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="w-full border p-2 rounded-lg"
+          >
+            <option value="">All Categories</option>
+            <option>UR</option>
+            <option>OBC</option>
+            <option>SC</option>
+            <option>ST</option>
+            <option>EWS</option>
+          </select>
+        </div>
+      )}
+
+      {/* TABLE */}
       <div className="max-w-2xl mx-auto mt-6 bg-white rounded-xl shadow-sm">
 
         <div className="grid grid-cols-5 px-4 py-3 border-b text-sm font-medium text-gray-500">
@@ -183,19 +188,32 @@ export default function Leaderboard() {
           <span>Norm</span>
         </div>
 
-        {loading ? (
-          <p className="text-center py-6">Loading...</p>
+        {(loading && !search) || searchLoading ? (
+          [...Array(6)].map((_, i) => (
+            <div key={i} className="grid grid-cols-5 px-4 py-3 animate-pulse">
+              <div className="h-4 bg-gray-200 rounded"></div>
+              <div className="h-4 bg-gray-200 rounded"></div>
+              <div className="h-4 bg-gray-200 rounded"></div>
+              <div className="h-4 bg-gray-200 rounded"></div>
+              <div className="h-4 bg-gray-200 rounded"></div>
+            </div>
+          ))
         ) : finalData.length === 0 ? (
           <p className="text-center py-6 text-gray-500">No results found</p>
         ) : (
-          finalData.map((item) => {
-            // ✅ GLOBAL RANK (FIXED)
-            const rank = data.findIndex((d) => d.id === item.id) + 1;
+          finalData.map((item, index) => {
+            const rank = search ? item.rank : index + 1;
+            const highlight = search && index === 0;
 
             return (
-              <div key={item.id} className="grid grid-cols-5 px-4 py-3 border-b">
-                <span>Rank {rank}</span>
-                <span className="truncate">{item.name}</span>
+              <div
+                key={item.id}
+                className={`grid grid-cols-5 px-4 py-3 border-b ${
+                  highlight ? "bg-yellow-50 border-yellow-300" : ""
+                }`}
+              >
+                <span>{rank ? `Rank ${rank}` : "—"}</span>
+                <span className="truncate font-medium">{item.name}</span>
                 <span>{item.marks}</span>
                 <span>{item.shift ?? "-"}</span>
                 <span>{item.normalizedMarks ?? "-"}</span>
@@ -205,26 +223,35 @@ export default function Leaderboard() {
         )}
       </div>
 
-      {/* Load More */}
-      {data.length > displayCount && !search && (
+      {/* LOAD MORE */}
+      {!search && lastId && data.length >= LIMIT && (
         <div className="max-w-2xl mx-auto mt-4 text-center">
           <button
-            onClick={handleLoadMore}
-            className="px-6 py-2 bg-black text-white rounded-lg"
+            onClick={() => fetchData(true)}
+            disabled={loading}
+            className="px-6 py-2 bg-gradient-to-r from-amber-600 via-orange-500 to-red-600 text-white rounded-lg font-semibold disabled:opacity-50"
           >
-            Load More ({data.length - displayCount} remaining)
+            {loading ? "Loading..." : "Load More"}
           </button>
         </div>
       )}
 
-      {/* CTA */}
-      {showCTA && (
-        <div className="max-w-2xl mx-auto mt-8 text-center">
-          <p>🎯 Rank mil gaya?</p>
-          <h3>Selection hoga ya nahi? 🤔</h3>
+      { (
+        <div className="max-w-2xl mx-auto mt-8 bg-white rounded-xl shadow-sm p-5 text-center border">
+          <p className="text-sm text-gray-500">🎯 Rank mil gaya?</p>
+          <h3 className="text-lg font-semibold mt-1">
+            Selection hoga ya nahi? 🤔
+          </h3>
+
+          <a
+            href="https://www.youtube.com/@VidyaDeepamOfficial"
+            target="_blank"
+            className="inline-block mt-4 bg-gradient-to-r from-amber-600 via-orange-500 to-red-600 text-white px-6 py-2 rounded-lg hover:from-amber-700 hover:via-orange-600 hover:to-red-700 transition font-semibold"
+          >
+            📊 Daily updates on YouTube 📊
+          </a>
         </div>
       )}
-
     </main>
   );
 }

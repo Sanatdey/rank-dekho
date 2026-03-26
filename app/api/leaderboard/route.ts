@@ -6,6 +6,9 @@ import {
   orderBy,
   limit,
   getDocs,
+  startAfter,
+  doc,
+  getDoc,
 } from "firebase/firestore";
 
 export async function GET(req: Request) {
@@ -14,21 +17,27 @@ export async function GET(req: Request) {
 
     const zone = searchParams.get("zone");
     const category = searchParams.get("category");
+    const lastId = searchParams.get("lastId");
 
     const constraints: any[] = [];
 
-    // ✅ Filters (clean & scalable)
     if (zone) constraints.push(where("zone", "==", zone));
     if (category) constraints.push(where("category", "==", category));
 
-    // ✅ Always sort
     constraints.push(orderBy("marks", "desc"));
 
-    // ✅ Limit (safe for now)
-    constraints.push(limit(500));
+    if (lastId) {
+      const lastDocRef = doc(db, "scores", lastId);
+      const lastSnap = await getDoc(lastDocRef);
+
+      if (lastSnap.exists()) {
+        constraints.push(startAfter(lastSnap));
+      }
+    }
+
+    constraints.push(limit(30));
 
     const q = query(collection(db, "scores"), ...constraints);
-
     const snapshot = await getDocs(q);
 
     const data = snapshot.docs.map((doc) => ({
@@ -36,10 +45,15 @@ export async function GET(req: Request) {
       ...doc.data(),
     }));
 
-    return Response.json(data);
+    const lastVisible = snapshot.docs[snapshot.docs.length - 1];
+
+    return Response.json({
+      data,
+      lastId: lastVisible ? lastVisible.id : null,
+    });
 
   } catch (err) {
     console.error("Leaderboard API error:", err);
-    return Response.json([], { status: 200 });
+    return Response.json({ data: [], lastId: null });
   }
 }
