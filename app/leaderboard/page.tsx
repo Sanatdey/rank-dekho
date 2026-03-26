@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 interface LeaderboardEntry {
   id: string;
@@ -82,7 +83,7 @@ export default function Leaderboard() {
     setSearch(input);
     setSearchLoading(true);
 
-    const res = await fetch(`/api/search?name=${input}`);
+    const res = await fetch(`/api/search-normalized?name=${input}`);
     const json = await res.json();
     setSearchResults(json);
 
@@ -100,8 +101,6 @@ export default function Leaderboard() {
     fetchNormStats(); // 🔥 NEW
     fetchData();
   }, [zone, category]);
-
-  const finalData = search ? searchResults : data;
 
   const userRank = searchResults[0]?.rank;
 
@@ -121,6 +120,17 @@ export default function Leaderboard() {
 
     return Number(normalized.toFixed(2));
   };
+
+   const enrichedData = data.map(item => ({
+    ...item,
+    normalized: normalize(item.marks, item.shift)
+  }));
+
+  const sortedByNorm = [...enrichedData].sort(
+    (a, b) => b.normalized - a.normalized
+  );
+
+  const finalData = search ? searchResults : sortedByNorm;
 
   // 🔥 TOP 3 (only leaderboard mode)
   const top3 = !search ? data.slice(0, 3) : [];
@@ -241,7 +251,9 @@ export default function Leaderboard() {
           <p className="text-center py-6 text-gray-500">No results found</p>
         ) : (
           finalData.map((item, index) => {
-            const rank = search ? item.rank : index + 1;
+            const rank = search
+                ? item.normalizedRank || item.rank
+                : index + 1;
             const highlight = search && index === 0;
 
             return (
@@ -300,7 +312,12 @@ export default function Leaderboard() {
         <h3 className="text-lg font-semibold mt-1">
           Selection hoga ya nahi? 🤔
         </h3>
-
+        <p className="mt-2 text-sm">
+          ℹ️{" "}
+          <Link href="/normalization-info" className="text-blue-600 underline">
+            How your marks will change after normalization
+          </Link>
+        </p>
         <a
           href="https://www.youtube.com/@VidyaDeepamOfficial"
           target="_blank"
