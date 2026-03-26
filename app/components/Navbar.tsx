@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 export default function Navbar() {
@@ -17,8 +18,22 @@ export default function Navbar() {
       <div className="max-w-4xl mx-auto flex items-center justify-between px-4 py-3">
 
         {/* Logo */}
-        <Link href="/" className="font-bold text-lg">
-          RankDekho
+        <Link href="/" className="flex items-center gap-3 group">
+          <Image 
+            src="/hanuman_logo_transparent.png" 
+            alt="Rank Dekho Logo" 
+            width={45} 
+            height={45}
+            className="group-hover:scale-110 transition-transform duration-300"
+          />
+          <div className="hidden sm:flex flex-col">
+            <span className="text-2xl font-black bg-gradient-to-r from-amber-600 via-orange-500 to-red-600 bg-clip-text text-transparent">
+              Rank
+            </span>
+            <span className="text-xs font-bold text-gray-500 -mt-1 tracking-widest">
+              DEKHO
+            </span>
+          </div>
         </Link>
 
         {/* Links */}

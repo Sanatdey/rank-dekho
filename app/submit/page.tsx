@@ -44,40 +44,39 @@ export default function SubmitPage() {
   const [success, setSuccess] = useState("");
 
   const submit = async () => {
-    setError("");
-    setSuccess("");
+  if (loading) return; // 🔥 prevent double click
 
-    if (!form.name || !form.marks) {
-      setError("Please fill all fields");
-      return;
-    }
+  setError("");
+  setSuccess("");
 
-    try {
-      setLoading(true);
+  if (!form.name || !form.marks) {
+    setError("Please fill all fields");
+    return;
+  }
 
-      const res = await fetch("/api/submit", {
-        method: "POST",
-        body: JSON.stringify({
-          ...form,
-          normalizedMarks: Number(form.marks) * 1.1,
-        }),
-      });
+  try {
+    setLoading(true); // 🔥 disable instantly
 
-      if (!res.ok) {
-        throw new Error("Submission failed");
-      }
+    const res = await fetch("/api/submit", {
+      method: "POST",
+      body: JSON.stringify({
+        ...form,
+        normalizedMarks: Number(form.marks) * 1.1,
+      }),
+    });
 
-      setSuccess("Submitted successfully 🚀");
+    if (!res.ok) throw new Error("Failed");
 
-      setTimeout(() => {
-        router.push(`/leaderboard?zone=${form.zone}&category=${form.category}`);
-      }, 1200);
+    setSuccess("Submitted 🚀");
 
-    } catch (err) {
-      setError("Something went wrong. Try again.");
-    } finally {
-      setLoading(false);
-    }
+    setTimeout(() => {
+      router.push(`/leaderboard?zone=${form.zone}&category=${form.category}`);
+    }, 1000);
+
+  } catch (err) {
+    setError("Something went wrong");
+    setLoading(false); // 🔥 re-enable ONLY on error
+  }
   };
 
   return (
@@ -162,7 +161,7 @@ export default function SubmitPage() {
           onClick={submit}
           disabled={loading}
           className={`w-full mt-6 py-2 rounded-lg text-white ${
-            loading ? "bg-gray-400" : "bg-black"
+            loading ? "bg-gray-400 cursor-not-allowed" : "bg-black"
           }`}
         >
           {loading ? "Submitting..." : "Submit & Check Rank 🚀"}
