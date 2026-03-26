@@ -15,60 +15,19 @@ export async function GET(req: Request) {
     const zone = searchParams.get("zone");
     const category = searchParams.get("category");
 
-    let q;
+    const constraints: any[] = [];
 
-    // ✅ If no filters → ALL candidates
-    if (!zone && !category) {
-      q = query(
-        collection(db, "scores"),
-        orderBy("marks", "desc"),
-        limit(50)
-      );
-    }else if (zone && !category) {
-      q = query(
-        collection(db, "scores"),
-        where("zone", "==", zone),  
-        orderBy("marks", "desc"),
-        limit(50)
-      );
-    }else if (!zone && category) {
-      q = query(
-        collection(db, "scores"),
-        where("category", "==", category),
-        orderBy("marks", "desc"),
-        limit(50)
-      );
-    } 
-    // ✅ If both filters
-    else if (zone && category) {
-      q = query(
-        collection(db, "scores"),
-        where("zone", "==", zone),
-        where("category", "==", category),
-        orderBy("marks", "desc"),
-        limit(50)
-      );
-    }
+    // ✅ Filters (clean & scalable)
+    if (zone) constraints.push(where("zone", "==", zone));
+    if (category) constraints.push(where("category", "==", category));
 
-    // ✅ Only zone
-    else if (zone) {
-      q = query(
-        collection(db, "scores"),
-        where("zone", "==", zone),
-        orderBy("marks", "desc"),
-        limit(50)
-      );
-    }
+    // ✅ Always sort
+    constraints.push(orderBy("marks", "desc"));
 
-    // ✅ Only category
-    else {
-      q = query(
-        collection(db, "scores"),
-        where("category", "==", category),
-        orderBy("marks", "desc"),
-        limit(50)
-      );
-    }
+    // ✅ Limit (safe for now)
+    constraints.push(limit(500));
+
+    const q = query(collection(db, "scores"), ...constraints);
 
     const snapshot = await getDocs(q);
 
@@ -80,7 +39,7 @@ export async function GET(req: Request) {
     return Response.json(data);
 
   } catch (err) {
-    console.error(err);
-    return Response.json([], { status: 200 }); // safe fallback
+    console.error("Leaderboard API error:", err);
+    return Response.json([], { status: 200 });
   }
 }
