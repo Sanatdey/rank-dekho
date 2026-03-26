@@ -104,27 +104,11 @@ export default function Leaderboard() {
     setSearchResults([]);
   };
 
- useEffect(() => {
-  let mounted = true;
-
-  const load = async () => {
-    try {
-      await Promise.all([
-        fetchStats(),
-        fetchNormStats(),
-        fetchData(),
-      ]);
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  if (mounted) load();
-
-  return () => {
-    mounted = false;
-  };
-}, [zone, category]);
+  useEffect(() => {
+    fetchStats();
+    fetchNormStats(); // 🔥 NEW
+    fetchData();
+  }, [zone, category]);
 
   const userRank = searchResults[0]?.rank;
 
@@ -261,7 +245,7 @@ const enrichedData = data.map(item => ({
           <span>Norm</span>
         </div>
 
-        {(loading && !search && data.length === 0) || searchLoading ? (
+        {(loading && !search) || searchLoading ? (
           [...Array(6)].map((_, i) => (
             <div key={i} className="grid grid-cols-5 px-4 py-3 animate-pulse">
               <div className="h-4 bg-gray-200 rounded"></div>
