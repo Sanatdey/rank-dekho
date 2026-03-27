@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { trackEvent } from "../utils/gtag";
 
 interface LeaderboardEntry {
   id: string;
@@ -110,6 +111,10 @@ export default function Leaderboard() {
     fetchData();
   }, [zone, category]);
 
+  useEffect(() => {
+    trackEvent("leaderboard_viewed");
+  }, []);
+
   const userRank = searchResults[0]?.rank;
 
   // 🔥 NORMALIZE FUNCTION
@@ -211,7 +216,12 @@ const enrichedData = data.map(item => ({
           <select
             className="w-full border p-2 rounded-lg"
             value={zone}
-            onChange={(e) => setZone(e.target.value)}
+            onChange={(e) => {
+              setZone(e.target.value);
+              trackEvent("zone_selected", {
+                zone: e.target.value || "all",
+              });
+            }}
           >
             <option value="">All Zones</option>
             {zones.map((z) => (
@@ -221,7 +231,12 @@ const enrichedData = data.map(item => ({
 
           <select
             value={category}
-            onChange={(e) => setCategory(e.target.value)}
+            onChange={(e) => {
+              setCategory(e.target.value);
+              trackEvent("category_selected", {
+                category: e.target.value || "all",
+              });
+            }}
             className="w-full border p-2 rounded-lg"
           >
             <option value="">All Categories</option>
@@ -322,13 +337,22 @@ const enrichedData = data.map(item => ({
         </h3>
         <p className="mt-2 text-sm">
           ℹ️{" "}
-          <Link href="/normalization-info" className="text-blue-600 underline">
+          <Link
+            href="/normalization-info"
+            onClick={() =>
+              trackEvent("normalization_info_clicked", { location: "leaderboard" })
+            }
+            className="text-blue-600 underline"
+          >
             How your marks will change after normalization
           </Link>
         </p>
         <a
           href="https://www.youtube.com/@VidyaDeepamOfficial"
           target="_blank"
+          onClick={() =>
+            trackEvent("youtube_channel_clicked", { location: "leaderboard" })
+          }
           className="inline-block mt-4 bg-gradient-to-r from-amber-600 via-orange-500 to-red-600 text-white px-6 py-2 rounded-lg font-semibold"
         >
           📊 Daily updates on YouTube 📊

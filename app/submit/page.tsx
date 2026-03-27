@@ -1,5 +1,5 @@
 "use client";
-
+import { trackEvent } from "../utils/gtag";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -171,7 +171,12 @@ export default function SubmitPage() {
             </div>
 
             <button
-              onClick={submit}
+              onClick={() => {
+                trackEvent("submit_clicked", {
+                  location: "submit_page",
+                });
+                submit();
+              }}
               disabled={loading}
               className="w-full mt-6 py-2 bg-gradient-to-r from-amber-600 via-orange-500 to-red-600 text-white rounded-lg"
             >

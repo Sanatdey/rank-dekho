@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { trackEvent } from "../utils/gtag";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 
@@ -38,13 +39,33 @@ export default function Navbar() {
 
         {/* Links */}
         <div className="flex gap-2">
-          <Link href="/" className={linkStyle("/")}>
+          <Link
+            href="/"
+            className={linkStyle("/")}
+            onClick={() => trackEvent("nav_home_clicked", {
+              location: "navbar",
+            })}
+          >
             Home
           </Link>
-          <Link href="/leaderboard" className={linkStyle("/leaderboard")}>
+
+          <Link
+            href="/leaderboard"
+            className={linkStyle("/leaderboard")}
+            onClick={() => trackEvent("nav_leaderboard_clicked", {
+                location: "navbar",
+            })}
+          >
             Leaderboard
           </Link>
-          <Link href="/submit" className={linkStyle("/submit")}>
+
+          <Link
+            href="/submit"
+            className={linkStyle("/submit")}
+            onClick={() => trackEvent("nav_submit_clicked", {
+                location: "navbar",
+            })}
+          >
             Submit
           </Link>
         </div>

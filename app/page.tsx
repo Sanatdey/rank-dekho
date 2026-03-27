@@ -1,4 +1,6 @@
 import Link from "next/link";
+import TrackedLinkButton from "./components/TrackedLinkButton";
+import TrackedExternalLink from "./components/TrackedExternalLink";
 
 export default function Home() {
   return (
@@ -15,29 +17,40 @@ export default function Home() {
         </p>
 
         <div className="mt-6 flex justify-center gap-4">
-          <Link href="/submit">
-            <button className="bg-gradient-to-r from-amber-600 via-orange-500 to-red-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-amber-700 hover:via-orange-600 hover:to-red-700 transition shadow-md">
-              Submit Marks
-            </button>
-          </Link>
 
-          <Link href="/leaderboard">
-            <button className="border-2 border-amber-600 text-amber-700 px-8 py-3 rounded-lg font-semibold hover:bg-amber-50 transition">
-              View Leaderboard
-            </button>
-          </Link>
+          {/* ✅ Submit */}
+          <TrackedLinkButton
+            href="/submit"
+            event="cta_submit_clicked"
+            location="landing"
+            className="bg-gradient-to-r from-amber-600 via-orange-500 to-red-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-amber-700 hover:via-orange-600 hover:to-red-700 transition shadow-md"
+          >
+            Submit Marks
+          </TrackedLinkButton>
+
+          {/* ✅ Leaderboard */}
+          <TrackedLinkButton
+            href="/leaderboard"
+            event="cta_leaderboard_clicked"
+            location="landing"
+            className="border-2 border-amber-600 text-amber-700 px-8 py-3 rounded-lg font-semibold hover:bg-amber-50 transition"
+          >
+            View Leaderboard
+          </TrackedLinkButton>
+
         </div>
 
-        {/* 🎥 Soft Video Push */}
+        {/* 🎥 Video */}
         <p className="text-xs text-gray-500 mt-4">
           🎥 Full cutoff analysis →
-          <a
+          <TrackedExternalLink
             href="https://www.youtube.com/watch?v=ShobN8puCuA"
-            target="_blank"
+            event="youtube_video_clicked"
+            location="landing"
             className="underline ml-1"
           >
             Watch Now
-          </a>
+          </TrackedExternalLink>
         </p>
       </section>
 
@@ -49,7 +62,7 @@ export default function Home() {
 
         <div className="bg-white p-4 rounded-xl shadow-sm space-y-2">
           <p><b>Exam:</b> RRB Nursing Superindant 2026</p>
-          <p><b>Total Posts:</b>  272</p>
+          <p><b>Total Posts:</b> 272</p>
           <p><b>Expected Cutoff:</b> 60–75</p>
           <p><b>Competition Level:</b> High 🔥</p>
         </div>
@@ -58,28 +71,37 @@ export default function Home() {
           *Independent analysis based on student data
         </p>
 
-        {/* 🔥 STRONG VIDEO PUSH */}
         <div className="mt-5 text-center">
+
+          {/* ℹ️ Info */}
           <p className="mt-2 text-sm">
-          ℹ️{" "}
-          <Link href="/normalization-info" className="text-blue-600 underline">
-            How your marks will change after normalization
-          </Link>
-        </p>
+            ℹ️{" "}
+            <Link
+              href="/normalization-info"
+              className="text-blue-600 underline"
+            >
+              How your marks will change after normalization
+            </Link>
+          </p>
+
           <p className="text-sm text-gray-600">
             📊 Want detailed cutoff & selection analysis?
           </p>
-          <a
+
+          {/* 📺 Channel */}
+          <TrackedExternalLink
             href="https://www.youtube.com/channel/UCRy0SOk3XQCa0L0TFDuzIwQ"
-            target="_blank"
+            event="youtube_channel_clicked"
+            location="landing"
             className="inline-block mt-2 bg-gradient-to-r from-amber-600 via-orange-500 to-red-600 text-white px-6 py-2 rounded-lg hover:from-amber-700 hover:via-orange-600 hover:to-red-700 transition font-semibold"
           >
             Check Cutoff Analysis 📊
-          </a>
+          </TrackedExternalLink>
+
         </div>
       </section>
 
-      {/* 💡 WHY SECTION */}
+      {/* 💡 WHY */}
       <section className="py-10 px-4 bg-white">
         <h2 className="text-xl font-semibold text-center mb-6">
           Why RankDekho?
@@ -118,27 +140,31 @@ export default function Home() {
         </h2>
 
         <p className="text-gray-600 mt-2">
-          Join students already checking their position
+          370+ Join students already checking their position
         </p>
 
-        <Link href="/submit">
-          <button className="mt-5 bg-gradient-to-r from-amber-600 via-orange-500 to-red-600 text-white px-8 py-3 rounded-lg hover:from-amber-700 hover:via-orange-600 hover:to-red-700 transition font-semibold">
-            Check Now 🔥
-          </button>
-        </Link>
+        <TrackedLinkButton
+          href="/submit"
+          event="cta_check_now_clicked"
+          location="landing"
+          className="mt-5 bg-gradient-to-r from-amber-600 via-orange-500 to-red-600 text-white px-8 py-3 rounded-lg hover:from-amber-700 hover:via-orange-600 hover:to-red-700 transition font-semibold"
+        >
+          Check Now 🔥
+        </TrackedLinkButton>
       </section>
 
-      {/* 📺 FOOTER (CHANNEL LINK) */}
+      {/* 📺 FOOTER */}
       <footer className="text-center text-xs text-gray-500 py-6">
         Built for RRB / NORCET aspirants 🚆 <br />
 
-        <a
+        <TrackedExternalLink
           href="https://www.youtube.com/channel/UCRy0SOk3XQCa0L0TFDuzIwQ"
-          target="_blank"
+          event="youtube_subscribe_clicked"
+          location="landing"
           className="underline"
         >
           Subscribe on YouTube @VidyaDeepam
-        </a>
+        </TrackedExternalLink>
       </footer>
 
     </main>
