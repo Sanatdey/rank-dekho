@@ -59,6 +59,12 @@ export default function SubmitPage() {
       if (!res.ok) throw new Error();
 
       setRank(json.rank);
+
+            // 🔥 ADD THIS EXACTLY HERE
+      trackEvent("result_viewed", {
+        rank: json.rank.overall,
+        percentile: json.rank.percentile,
+      });
       setSuccess("Submitted successfully 🚀");
       setLoading(false);
 
@@ -140,30 +146,51 @@ export default function SubmitPage() {
             {/* 📢 Share */}
             <button
               onClick={() => {
-                const text = `🔥 I got Rank #${rank.overall} in RRB
+                trackEvent("share_clicked", {
+                  rank: rank.overall,
+                  percentile: rank.percentile,
+                });
 
-                🔥 Beat ${rank.percentile}% students
+                const text = 
+`🔥 I got Rank #${rank.overall} in RRB
 
-                Check yours 👉 ${window.location.origin}
+🔥 Beat ${rank.percentile}% students
 
-                Don't trust fake predictions ⚡`;
+Check yours 👉 ${window.location.origin}
+
+Don't trust fake predictions ⚡`;
 
                 if (navigator.share) {
-                  navigator.share({ text });
+                  navigator.share({ text }).then(() => {
+                    trackEvent("share_completed", {
+                      rank: rank.overall,
+                    });
+                  });
                 } else {
                   navigator.clipboard.writeText(text);
                   alert("Copied!");
+
+                  // fallback tracking
+                  trackEvent("share_completed", {
+                    rank: rank.overall,
+                  });
                 }
               }}
               className="w-full py-3 rounded-lg bg-gradient-to-r from-orange-500 to-red-600 text-white font-semibold"
             >
-              🟢 Show My Rank to Friends 
+              🟢 Show My Rank to Friends
             </button>
               <p>⚡ 100+ students already shared their rank</p>
             {/* 📺 YouTube CTA */}
             <a
               href="https://www.youtube.com/@VidyaDeepamOfficial?sub_confirmation=1"
               target="_blank"
+              onClick={() =>
+                trackEvent("youtube_clicked", {
+                  rank: rank.overall,
+                  percentile: rank.percentile,
+                })
+              }
               className="block w-full py-3 rounded-lg border text-red-600 font-semibold bg-red-50 hover:bg-red-100 transition"
             >
               📺 Don’t Miss Your Final Rank Update ⚡
@@ -186,7 +213,10 @@ export default function SubmitPage() {
             </p>
 
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => {
+                trackEvent("recalculate_clicked", {});
+                window.location.reload();
+              }}
               className="w-full py-2 bg-green-600 text-white rounded-lg"
             >
               🔄 Recalculate My Rank

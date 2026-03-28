@@ -351,7 +351,7 @@ const enrichedData = data.map(item => ({
           href="https://www.youtube.com/@VidyaDeepamOfficial"
           target="_blank"
           onClick={() =>
-            trackEvent("youtube_channel_clicked", { location: "leaderboard" })
+            trackEvent("youtube_channel_clicked_leaderboard", { location: "leaderboard" })
           }
           className="inline-block mt-4 bg-gradient-to-r from-amber-600 via-orange-500 to-red-600 text-white px-6 py-2 rounded-lg font-semibold"
         >
