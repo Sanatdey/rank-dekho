@@ -331,6 +331,49 @@ export default function Leaderboard() {
         })}
       </div>
 
+        {/* LOAD MORE */}
+      {!search && lastId && data.length >= LIMIT && (
+        <div className="max-w-2xl mx-auto mt-4 text-center">
+          <button
+            onClick={() => fetchData(true)}
+            disabled={loading}
+            className="px-6 py-2 bg-gradient-to-r from-amber-600 via-orange-500 to-red-600 text-white rounded-lg font-semibold disabled:opacity-50"
+          >
+            {loading ? "Loading..." : "Load More"}
+          </button>
+        </div>
+      )}
+
+      {/* CTA */}
+      <div className="max-w-2xl mx-auto mt-8 bg-white rounded-xl shadow-sm p-5 text-center border">
+        <p className="text-sm text-gray-500">🎯 Rank mil gaya?</p>
+        <h3 className="text-lg font-semibold mt-1">
+          Selection hoga ya nahi? 🤔
+        </h3>
+        <p className="mt-2 text-sm">
+          ℹ️{" "}
+          <Link
+            href="/normalization-info"
+            onClick={() =>
+              trackEvent("normalization_info_clicked", { location: "leaderboard" })
+            }
+            className="text-blue-600 underline"
+          >
+            How your marks will change after normalization
+          </Link>
+        </p>
+        <a
+          href="https://www.youtube.com/@VidyaDeepamOfficial"
+          target="_blank"
+          onClick={() =>
+            trackEvent("youtube_channel_clicked_leaderboard", { location: "leaderboard" })
+          }
+          className="inline-block mt-4 bg-gradient-to-r from-amber-600 via-orange-500 to-red-600 text-white px-6 py-2 rounded-lg font-semibold"
+        >
+          📊 Daily updates on YouTube 📊
+        </a>
+      </div>
+
     </main>
   );
 }
