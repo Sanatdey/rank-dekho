@@ -44,7 +44,9 @@ export async function POST(req: Request) {
       const shiftStats = stats?.shifts?.[shift];
       const global = stats?.global;
 
-      if (!shiftStats || shiftStats.sd === 0) return marks;
+      if (!shiftStats || !global || shiftStats.sd === 0 || global.sd === 0) {
+        return marks;
+      }
 
       return (
         ((marks - shiftStats.mean) / shiftStats.sd) *
@@ -86,6 +88,23 @@ export async function POST(req: Request) {
       ).sort((a, b) => b.marks - a.marks)
         .findIndex((u) => u.id === newDoc.id) + 1;
 
+        // ✅ Total users
+      const totalUsers = all.length;
+
+    // ✅ Percentile (MOST IMPORTANT)
+    const percentile = Math.max(
+      1,
+      Math.round((1 - overallRank / totalUsers) * 100)
+    );
+
+    // ✅ Your normalized marks
+    const myNormalizedMarks = normalize(marksNum, shift);
+
+    // ✅ Rank improvement potential (optional psychology trick)
+    const betterThan = totalUsers - overallRank + 1;
+
+    const highestMarks = Math.max(...all.map((u) => u.marks));
+
     return Response.json({
       success: true,
       rank: {
@@ -93,6 +112,13 @@ export async function POST(req: Request) {
         normalized: normalizedRank,
         zoneCategory: zoneCategoryRank,
         shiftZoneCategory: shiftZoneCategoryRank,
+
+        // 🔥 NEW FIELDS
+        percentile,
+        totalUsers,
+        normalizedMarks: Number(myNormalizedMarks.toFixed(2)),
+        betterThan,
+        highestMarks,
       },
     });
   } catch (err) {

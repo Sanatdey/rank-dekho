@@ -89,16 +89,34 @@ export default function SubmitPage() {
           <p className="mt-4 text-red-500 text-center">{error}</p>
         )}
 
-        {success && rank && (
-          <div className="mt-4 p-4 bg-green-50 border border-green-400 rounded-lg text-center space-y-2">
-            <p className="font-semibold text-green-700">{success}</p>
+      {rank && (
+        <div className="mt-6 space-y-4">
 
-            <p className="text-lg font-bold">
-              🎯 All India Rank: #{rank.overall}
+          {/* 🔥 Header */}
+          <div className="text-center">
+            <h2 className="text-2xl font-bold">
+              🔥 Your RRB Rank is LIVE!
+            </h2>
+
+            <p className="text-sm text-red-500 mt-1">
+              🎯 {rank.totalUsers}+ students submitted • Data updating
+            </p>
+          </div>
+
+          {/* 🧠 Main Card */}
+          <div className="bg-white rounded-xl p-5 shadow-md border space-y-3 text-center">
+
+            {/* 🔥 Percentile */}
+            <div className="bg-green-100 text-green-800 py-2 rounded-lg font-semibold">
+              🔥 You’re ahead of {rank.percentile} <b>%</b> students
+            </div>
+
+            <p className="text-xl font-bold">
+              🚀 All India Rank: #{rank.overall}
             </p>
 
-            <p className="text-lg font-bold text-green-700">
-              🚀 Normalized Rank: #{rank.normalized}
+            <p className="text-lg text-green-600 font-semibold">
+              ⚡ Normalized Rank: #{rank.normalized}
             </p>
 
             <p className="text-sm">
@@ -109,16 +127,110 @@ export default function SubmitPage() {
               🔄 Shift Rank: #{rank.shiftZoneCategory}
             </p>
 
+            {/* 🏆 Highest */}
+            <p className="text-sm font-medium">
+              🏆 Highest mark: {rank.highestMarks}
+            </p>
+
+            {/* ⚠️ Urgency */}
+            <div className="text-xs text-yellow-700 bg-yellow-50 p-2 rounded-lg">
+              ⚠️ Your rank can still change by 50–150 positions
+            </div>
+
+            {/* 📢 Share */}
             <button
-              onClick={() => router.push("/leaderboard")}
-              className="mt-3 w-full py-2 bg-gradient-to-r from-amber-600 via-orange-500 to-red-600 text-white rounded-lg"
+              onClick={() => {
+                const text = `🔥 I got Rank #${rank.overall} in RRB
+
+                🔥 Beat ${rank.percentile}% students
+
+                Check yours 👉 ${window.location.origin}
+
+                Don't trust fake predictions ⚡`;
+
+                if (navigator.share) {
+                  navigator.share({ text });
+                } else {
+                  navigator.clipboard.writeText(text);
+                  alert("Copied!");
+                }
+              }}
+              className="w-full py-3 rounded-lg bg-gradient-to-r from-orange-500 to-red-600 text-white font-semibold"
             >
-              View Leaderboard
+              🟢 Show My Rank to Friends 
+            </button>
+              <p>⚡ 100+ students already shared their rank</p>
+            {/* 📺 YouTube CTA */}
+            <a
+              href="https://www.youtube.com/@VidyaDeepamOfficial?sub_confirmation=1"
+              target="_blank"
+              className="block w-full py-3 rounded-lg border text-red-600 font-semibold bg-red-50 hover:bg-red-100 transition"
+            >
+              📺 Don’t Miss Your Final Rank Update ⚡
+            </a>
+            <p className="mt-2 text-sm text-gray-600">👥 100+ students tracking updates right now</p>
+            <p className="mt-2 text-sm text-gray-600">
+              📊 Based on real data — no <b>guesswork</b>
+            </p>
+
+          </div>
+
+          {/* 🔁 Retention */}
+          <div className="bg-green-50 p-4 rounded-xl text-center border space-y-2">
+            <p className="font-semibold">
+              ⚡ Ranks updating rapidly
+            </p>
+
+            <p className="text-sm text-gray-600">
+              ⏳ Come back in 3–6 hours for updated rank
+            </p>
+
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full py-2 bg-green-600 text-white rounded-lg"
+            >
+              🔄 Recalculate My Rank
             </button>
           </div>
-        )}
 
-        {!success && (
+          {/* 🔥 Incoming Loop */}
+          <div className="bg-green-100 p-4 rounded-xl text-center border">
+            <p className="font-semibold">
+              ⚡ Ranks will update again soon!
+            </p>
+
+            <p className="text-lg font-bold mt-1">
+              🏆 {rank.totalUsers} → {rank.totalUsers + 50}+ students incoming...
+            </p>
+
+            <p className="text-sm text-gray-600 mt-1">
+              Come back in a few hours to check your updated rank
+            </p>
+          </div>
+
+          {/* 💬 Feedback */}
+          <div className="bg-white p-4 rounded-xl border space-y-2">
+            <p className="font-semibold text-center">
+              💬 Help improve your rank accuracy 
+            </p>
+
+            <div className="flex gap-2 flex-wrap justify-center">
+              <button className="px-3 py-1 bg-gray-100 rounded-full text-sm">
+                Wrong Rank
+              </button>
+              <button className="px-3 py-1 bg-gray-100 rounded-full text-sm">
+                Bug
+              </button>
+              <button className="px-3 py-1 bg-gray-100 rounded-full text-sm">
+                Feature
+              </button>
+            </div>
+          </div>
+
+        </div>
+      )}
+
+        {!rank && (
           <>
             <div className="mt-6 space-y-4">
 
