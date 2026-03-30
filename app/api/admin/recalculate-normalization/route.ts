@@ -6,6 +6,8 @@ import {
   setDoc,
   getDoc,
 } from "firebase/firestore";
+import { syncPublicSnapshotFromFirestore } from "../../../lib/public-cache";
+import { computeIsSafe } from "../../../lib/rank-logic";
 
 type Stats = {
   global: { mean: number; sd: number; count: number };
@@ -130,18 +132,12 @@ export async function POST() {
 
     // 🔥 8. COMPUTE SAFE ZONE
     enriched.forEach((u) => {
-      const zone = u.zone;
-      const category = u.category;
-
-      const zoneData = vacancyData?.zones?.[zone];
-      const catVacancy = zoneData?.[category];
-
-      if (!catVacancy) {
-        u.isSafe = false;
-        return;
-      }
-
-      u.isSafe = u.zoneCategoryRank <= catVacancy;
+      u.isSafe = computeIsSafe({
+        zone: u.zone,
+        category: u.category,
+        zoneCategoryRank: u.zoneCategoryRank,
+        vacancyData,
+      });
     });
 
     // 🔥 9. SAVE EVERYTHING
@@ -160,9 +156,13 @@ export async function POST() {
 
     await Promise.all(updates);
 
+    const publicSnapshot = await syncPublicSnapshotFromFirestore();
+
     return Response.json({
       success: true,
       updated: enriched.length,
+      stats,
+      publicSnapshotUpdatedAt: publicSnapshot.updatedAt,
     });
 
   } catch (err) {

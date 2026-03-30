@@ -161,6 +161,10 @@ export default function CleanupPage() {
       await deleteDoc(doc(db, "scores", id));
     }
 
+    await fetch("/api/admin/sync-public-cache", {
+      method: "POST",
+    });
+
     alert("Deleted successfully");
 
     setSelected(new Set());

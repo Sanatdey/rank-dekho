@@ -140,7 +140,7 @@ export default function Home() {
         </h2>
 
         <p className="text-gray-600 mt-2">
-          370+ Join students already checking their position
+          1000+ Join students already checking their position
         </p>
 
         <TrackedLinkButton

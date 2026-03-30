@@ -1,58 +1,30 @@
-import { db } from "../../lib/firebase";
-import { collection, getDocs, doc, getDoc } from "firebase/firestore";
+import { getPublicSnapshot } from "../../lib/public-cache";
+
+function stripSearchIndex<T extends { lowerName: string }>(score: T) {
+  const { lowerName, ...publicScore } = score;
+  void lowerName;
+  return publicScore;
+}
 
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const name = searchParams.get("name")?.toLowerCase();
+  try {
+    const { searchParams } = new URL(req.url);
+    const name = searchParams.get("name")?.trim().toLowerCase();
 
-  if (!name) return Response.json([]);
+    if (!name) {
+      return Response.json([]);
+    }
 
-  // ✅ 1. Fetch ALL scores
-  const snapshot = await getDocs(collection(db, "scores"));
-  const all = snapshot.docs.map(d => ({
-    id: d.id,
-    ...(d.data() as any)
-  }));
+    const snapshot = await getPublicSnapshot();
 
-  // ✅ 2. REUSE normalization stats (NO recalculation)
-  const statsSnap = await getDoc(doc(db, "normalization", "latest"));
+    const results = snapshot.scores
+      .filter((score) => score.lowerName.includes(name))
+      .slice(0, 5)
+      .map(stripSearchIndex);
 
-  if (!statsSnap.exists()) {
-    return Response.json({ error: "Stats not ready" }, { status: 400 });
+    return Response.json(results);
+  } catch (err) {
+    console.error("Search normalized API error:", err);
+    return Response.json([]);
   }
-
-  const stats = statsSnap.data();
-
-  // ✅ 3. Normalize function
-  const normalize = (marks: number, shift: string) => {
-    const shiftStats = stats.shifts?.[shift];
-    const global = stats.global;
-
-    if (!shiftStats || shiftStats.sd === 0) return marks;
-
-    return (
-      ((marks - shiftStats.mean) / shiftStats.sd) *
-        global.sd +
-      global.mean
-    );
-  };
-
-  // ✅ 4. Compute normalized + rank
-  const ranked = all
-    .map(item => ({
-      ...item,
-      normalized: normalize(item.marks, item.shift)
-    }))
-    .sort((a, b) => b.normalized - a.normalized)
-    .map((item, index) => ({
-      ...item,
-      normalizedRank: index + 1
-    }));
-
-  // ✅ 5. Search
-  const results = ranked.filter(item =>
-    item.name.toLowerCase().includes(name)
-  );
-
-  return Response.json(results.slice(0, 5));
 }

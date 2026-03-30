@@ -1,11 +1,6 @@
+import { addDoc, collection } from "firebase/firestore";
 import { db } from "../../lib/firebase";
-import {
-  collection,
-  addDoc,
-  getDocs,
-  doc,
-  getDoc,
-} from "firebase/firestore";
+import { syncPublicSnapshotFromFirestore } from "../../lib/public-cache";
 
 export async function POST(req: Request) {
   try {
@@ -18,7 +13,6 @@ export async function POST(req: Request) {
 
     const marksNum = Number(marks);
 
-    // ✅ Save
     const newDoc = await addDoc(collection(db, "scores"), {
       name,
       marks: marksNum,
@@ -29,96 +23,28 @@ export async function POST(req: Request) {
       createdAt: new Date(),
     });
 
-    // ✅ Fetch all scores (needed for ranking)
-    const snapshot = await getDocs(collection(db, "scores"));
-    const all = snapshot.docs.map((d) => ({
-      id: d.id,
-      ...(d.data() as any),
-    }));
+    const snapshot = await syncPublicSnapshotFromFirestore();
+    const user = snapshot.scores.find((score) => score.id === newDoc.id);
 
-    // ✅ Fetch normalization stats (reuse, no recalculation)
-    const statsSnap = await getDoc(doc(db, "normalization", "latest"));
-    const stats = statsSnap.data();
-
-    const normalize = (marks: number, shift: string) => {
-      const shiftStats = stats?.shifts?.[shift];
-      const global = stats?.global;
-
-      if (!shiftStats || !global || shiftStats.sd === 0 || global.sd === 0) {
-        return marks;
-      }
-
-      return (
-        ((marks - shiftStats.mean) / shiftStats.sd) *
-          global.sd +
-        global.mean
+    if (!user) {
+      return Response.json(
+        { error: "Unable to generate rank for the new submission" },
+        { status: 500 }
       );
-    };
-
-    // ✅ RAW RANK
-    const sortedRaw = [...all].sort((a, b) => b.marks - a.marks);
-    const overallRank =
-      sortedRaw.findIndex((u) => u.id === newDoc.id) + 1;
-
-    // ✅ NORMALIZED RANK
-    const sortedNorm = [...all]
-      .map((u) => ({
-        ...u,
-        normalized: normalize(u.marks, u.shift),
-      }))
-      .sort((a, b) => b.normalized - a.normalized);
-
-    const normalizedRank =
-      sortedNorm.findIndex((u) => u.id === newDoc.id) + 1;
-
-    // ✅ Zone + Category
-    const zoneCategoryRank =
-      all.filter(
-        (u) => u.zone === zone && u.category === category
-      ).sort((a, b) => b.marks - a.marks)
-        .findIndex((u) => u.id === newDoc.id) + 1;
-
-    // ✅ Shift + Zone + Category
-    const shiftZoneCategoryRank =
-      all.filter(
-        (u) =>
-          u.zone === zone &&
-          u.category === category &&
-          u.shift === shift
-      ).sort((a, b) => b.marks - a.marks)
-        .findIndex((u) => u.id === newDoc.id) + 1;
-
-        // ✅ Total users
-      const totalUsers = all.length;
-
-    // ✅ Percentile (MOST IMPORTANT)
-    const percentile = Math.max(
-      1,
-      Math.round((1 - overallRank / totalUsers) * 100)
-    );
-
-    // ✅ Your normalized marks
-    const myNormalizedMarks = normalize(marksNum, shift);
-
-    // ✅ Rank improvement potential (optional psychology trick)
-    const betterThan = totalUsers - overallRank + 1;
-
-    const highestMarks = Math.max(...all.map((u) => u.marks));
+    }
 
     return Response.json({
       success: true,
       rank: {
-        overall: overallRank,
-        normalized: normalizedRank,
-        zoneCategory: zoneCategoryRank,
-        shiftZoneCategory: shiftZoneCategoryRank,
-
-        // 🔥 NEW FIELDS
-        percentile,
-        totalUsers,
-        normalizedMarks: Number(myNormalizedMarks.toFixed(2)),
-        betterThan,
-        highestMarks,
+        overall: user.overallRank,
+        normalized: user.normalizedRank,
+        zoneCategory: user.zoneCategoryRank,
+        shiftZoneCategory: user.shiftZoneCategoryRank,
+        percentile: user.percentile,
+        totalUsers: snapshot.stats.totalUsers,
+        normalizedMarks: Number(user.normalized.toFixed(2)),
+        betterThan: user.betterThan,
+        highestMarks: snapshot.stats.highestMarks,
       },
     });
   } catch (err) {

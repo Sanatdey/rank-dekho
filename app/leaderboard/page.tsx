@@ -16,6 +16,27 @@ interface LeaderboardEntry {
   isSafe?: boolean;
 }
 
+function LeaderboardSkeleton({ count = 6 }: { count?: number }) {
+  return (
+    <div className="max-w-2xl mx-auto mt-4">
+      {Array.from({ length: count }).map((_, index) => (
+        <div
+          key={index}
+          className="mb-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm animate-pulse"
+        >
+          <div className="grid grid-cols-5 items-center gap-3">
+            <div className="h-5 w-10 rounded bg-gray-200" />
+            <div className="h-5 w-28 rounded bg-gray-200" />
+            <div className="h-5 w-12 rounded bg-gray-200" />
+            <div className="h-5 w-10 rounded bg-gray-200" />
+            <div className="h-5 w-14 rounded bg-gray-200" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function Leaderboard() {
   const [zone, setZone] = useState("");
   const [category, setCategory] = useState("");
@@ -289,8 +310,11 @@ export default function Leaderboard() {
       </p>
 
       {/* LIST */}
+      {loading && !search && data.length === 0 ? (
+        <LeaderboardSkeleton />
+      ) : (
       <div className="max-w-2xl mx-auto mt-4">
-        {finalData.map((item, index) => {
+        {finalData.map((item) => {
 
           const isSafe = item.isSafe;
           const isBorderline = item.zoneCategoryRank! <= 5;
@@ -330,6 +354,7 @@ export default function Leaderboard() {
           );
         })}
       </div>
+      )}
 
         {/* LOAD MORE */}
       {!search && lastId && data.length >= LIMIT && (
@@ -342,6 +367,10 @@ export default function Leaderboard() {
             {loading ? "Loading..." : "Load More"}
           </button>
         </div>
+      )}
+
+      {loading && !search && data.length > 0 && (
+        <LeaderboardSkeleton count={3} />
       )}
 
       {/* CTA */}

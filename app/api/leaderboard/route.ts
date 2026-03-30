@@ -1,15 +1,25 @@
-import { db } from "../../lib/firebase";
-import {
-  collection,
-  query,
-  where,
-  orderBy,
-  limit,
-  getDocs,
-  startAfter,
-  doc,
-  getDoc,
-} from "firebase/firestore";
+import { getPublicSnapshot, type PublicScore } from "../../lib/public-cache";
+
+const PAGE_SIZE = 30;
+
+function stripSearchIndex(score: PublicScore) {
+  const { lowerName, ...publicScore } = score;
+  void lowerName;
+  return publicScore;
+}
+
+function sortLeaderboardEntries(
+  scores: PublicScore[],
+  useZoneCategoryRank: boolean
+) {
+  return [...scores].sort((a, b) => {
+    if (useZoneCategoryRank) {
+      return a.zoneCategoryRank - b.zoneCategoryRank;
+    }
+
+    return a.normalizedRank - b.normalizedRank;
+  });
+}
 
 export async function GET(req: Request) {
   try {
@@ -19,39 +29,34 @@ export async function GET(req: Request) {
     const category = searchParams.get("category");
     const lastId = searchParams.get("lastId");
 
-    const constraints: any[] = [];
+    const snapshot = await getPublicSnapshot();
 
-    if (zone) constraints.push(where("zone", "==", zone));
-    if (category) constraints.push(where("category", "==", category));
+    const filteredScores = snapshot.scores.filter((score) => {
+      if (zone && score.zone !== zone) return false;
+      if (category && score.category !== category) return false;
+      return true;
+    });
 
-    constraints.push(orderBy("marks", "desc"));
+    const sortedScores = sortLeaderboardEntries(
+      filteredScores,
+      Boolean(zone && category)
+    );
 
-    if (lastId) {
-      const lastDocRef = doc(db, "scores", lastId);
-      const lastSnap = await getDoc(lastDocRef);
+    const startIndex = lastId
+      ? Math.max(
+          0,
+          sortedScores.findIndex((score) => score.id === lastId) + 1
+        )
+      : 0;
 
-      if (lastSnap.exists()) {
-        constraints.push(startAfter(lastSnap));
-      }
-    }
-
-    constraints.push(limit(30));
-
-    const q = query(collection(db, "scores"), ...constraints);
-    const snapshot = await getDocs(q);
-
-    const data = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-
-    const lastVisible = snapshot.docs[snapshot.docs.length - 1];
+    const page = sortedScores.slice(startIndex, startIndex + PAGE_SIZE);
+    const data = page.map(stripSearchIndex);
+    const lastVisible = page[page.length - 1];
 
     return Response.json({
       data,
       lastId: lastVisible ? lastVisible.id : null,
     });
-
   } catch (err) {
     console.error("Leaderboard API error:", err);
     return Response.json({ data: [], lastId: null });
