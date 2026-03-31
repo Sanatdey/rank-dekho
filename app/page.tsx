@@ -84,6 +84,16 @@ export default function Home() {
             </Link>
           </p>
 
+          <p className="mt-2 text-sm">
+            📈{" "}
+            <Link
+              href="/historical-trends"
+              className="text-blue-600 underline"
+            >
+              Compare 2006-2024 zone trends, vacancies, and cutoff pressure
+            </Link>
+          </p>
+
           <p className="text-sm text-gray-600">
             📊 Want detailed cutoff & selection analysis?
           </p>
